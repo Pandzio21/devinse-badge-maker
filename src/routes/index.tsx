@@ -1,0 +1,607 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useRef, useState } from "react";
+
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Logo Color Editor" },
+      { name: "description", content: "Recolor the logo and export as SVG or PNG." },
+    ],
+  }),
+  component: Index,
+});
+
+const ICON_PATH =
+  "M18.679 8.157c-.377.29-.44.802-.44 3.547 0 2.011-.038 2.75-.144 2.816-.078.05-1.152.254-2.385.455l-2.242.365-.031 2.993c-.024 2.305.003 3.02.118 3.11.1.08.836.01 2.269-.22 1.166-.185 2.187-.313 2.268-.283.117.043.142 2.077.118 9.862l-.03 9.807-2.356.06-2.356.06V48h20.495v-7.271l-2.414-.06-2.415-.06-.03-10.701c-.024-8.5 0-10.713.118-10.756.152-.055 13.695-2.183 14.223-2.235.279-.027.297.007.327.627l.033.656-2.306 2.145-2.305 2.146-.672.06-.672.059v4.768h12.721V22.61l-.614-.036-.615-.036-1.947-2.158-1.947-2.158v-.742c0-.881.065-.951.99-1.065.876-.107 1.011-.161 1.015-.404.005-.378-.86-5.8-.941-5.891-.045-.051-3.937.526-8.65 1.284-4.712.756-8.617 1.345-8.677 1.307s-.11-.889-.11-1.891c0-1.894-.106-2.495-.476-2.696-.341-.185-9.677-.154-9.92.033m8.486 3.238c.037 1.742.058 1.693-.778 1.854l-.62.118-2.115-1.684c-1.163-.926-2.115-1.731-2.115-1.788s1.259-.09 2.797-.072l2.798.032zm-4.686 1.6c.883.718.854.76-.697 1.007-1.763.281-1.659.36-1.659-1.262 0-1.81-.218-1.833 2.356.256m4.688 7.202c.04.79-.015.817-.638.315-.252-.204-.56-.444-.686-.534-.289-.207-.223-.27.418-.4.835-.167.867-.145.906.62m18.538.926c.603.658 1.115 1.248 1.137 1.311.024.073-.889.116-2.445.116-1.365 0-2.484-.04-2.486-.09-.004-.103 2.497-2.52 2.616-2.527.044-.003.574.533 1.178 1.19m-21.606-.29c1.295 1.046 1.346 1.012-1.473.975l-2.444-.032-.037-.523c-.05-.695-.027-.71 1.522-.962.738-.12 1.368-.224 1.4-.23.033-.007.497.34 1.032.772m3.065 4.727c.018 1.033-.009 1.877-.059 1.876-.133-.002-4.56-3.555-4.607-3.698-.027-.079.765-.109 2.297-.088l2.337.033zm-4.382.75c1.316 1.046 2.353 1.944 2.303 1.994s-1.173.078-2.497.06l-2.406-.032-.032-2.008c-.024-1.468.004-1.995.102-1.962.075.025 1.213.902 2.53 1.948m4.382 5.708c.018.978-.008 1.817-.059 1.863-.09.083-4.529-3.382-4.607-3.597-.024-.065.909-.097 2.297-.078l2.337.033zm-4.39.804c1.331 1.06 2.375 1.974 2.32 2.03-.054.055-1.182.086-2.506.068l-2.406-.032-.032-1.997c-.02-1.28.01-1.996.086-1.996.065 0 1.207.867 2.538 1.927m4.39 5.731c.025 1.463 0 1.876-.118 1.87-.195-.01-4.476-3.461-4.54-3.66-.038-.12.44-.145 2.289-.12l2.337.033zm-2.924 2.03c.003.05-.909.077-2.026.06l-2.032-.034-.033-1.483c-.018-.816-.007-1.554.026-1.64.058-.152 4.052 2.89 4.065 3.097";
+
+type Opts = {
+  bgTop: string;
+  bgBottom: string;
+  accentStart: string;
+  accentEnd: string;
+  textColor: string;
+  borderColor: string;
+  borderOpacity: number;
+  iconImage: string | null;
+  badgeText: string;
+};
+
+function buildSvg(o: Opts) {
+  const iconBlock = o.iconImage
+    ? `<image href="${o.iconImage}" x="10" y="8" width="40" height="40" preserveAspectRatio="xMidYMid meet"/>`
+    : `<g filter="url(#b)"><path fill="url(#cIcon)" fill-rule="evenodd" d="${ICON_PATH}" clip-rule="evenodd"/></g>`;
+
+  const escapedText = o.badgeText
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const textBlock = `<g filter="url(#d)"><text x="60" y="35" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="${o.textColor}">${escapedText}</text></g>`;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="213" height="56" fill="none" viewBox="0 0 213 56"><rect width="213" height="56" fill="url(#bgGrad)" rx="8"/><rect width="210.9" height="53.9" x="1.05" y="1.05" stroke="${o.borderColor}" stroke-opacity="${o.borderOpacity}" stroke-width="2.1" rx="6.95"/>${iconBlock}${textBlock}<defs><linearGradient id="bgGrad" x1="106.5" x2="106.5" y1="0" y2="56" gradientUnits="userSpaceOnUse"><stop stop-color="${o.bgTop}"/><stop offset="1" stop-color="${o.bgBottom}"/></linearGradient><linearGradient id="cIcon" x1="32" x2="32" y1="8" y2="48" gradientUnits="userSpaceOnUse"><stop stop-color="${o.accentStart}"/><stop offset="1" stop-color="${o.accentEnd}"/></linearGradient><linearGradient id="cText" x1="136.066" x2="136.066" y1="28.5" y2="43.731" gradientUnits="userSpaceOnUse"><stop stop-color="${o.accentStart}"/><stop offset="1" stop-color="${o.accentEnd}"/></linearGradient><filter id="b" width="51.429" height="51.429" x="6.286" y="2.286" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/><feOffset/><feGaussianBlur stdDeviation="2.857"/><feComposite in2="hardAlpha" operator="out"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/><feBlend in2="BackgroundImageFix" result="e1"/><feBlend in="SourceGraphic" in2="e1" result="shape"/></filter><filter id="d" width="152.2" height="48.677" x="54.4" y="3.9" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/><feOffset/><feGaussianBlur stdDeviation="2.8"/><feComposite in2="hardAlpha" operator="out"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/><feBlend in2="BackgroundImageFix" result="e1"/><feBlend in="SourceGraphic" in2="e1" result="shape"/></filter></defs></svg>`;
+}
+
+type Preset = {
+  name: string;
+  bgTop: string;
+  bgBottom: string;
+  accentStart: string;
+  accentEnd: string;
+  textColor: string;
+};
+
+const PRESETS: Preset[] = [
+  {
+    name: "Original",
+    bgTop: "#311d14",
+    bgBottom: "#1c0b0b",
+    accentStart: "#e05718",
+    accentEnd: "#d63833",
+    textColor: "#e8e8e8",
+  },
+  {
+    name: "Sunset",
+    bgTop: "#2d1010",
+    bgBottom: "#0e0306",
+    accentStart: "#f97316",
+    accentEnd: "#ef4444",
+    textColor: "#fff7ed",
+  },
+  {
+    name: "Ocean",
+    bgTop: "#0b2545",
+    bgBottom: "#061025",
+    accentStart: "#3b82f6",
+    accentEnd: "#06b6d4",
+    textColor: "#f8fafc",
+  },
+  {
+    name: "Aqua",
+    bgTop: "#04363d",
+    bgBottom: "#021417",
+    accentStart: "#22d3ee",
+    accentEnd: "#14b8a6",
+    textColor: "#ecfeff",
+  },
+  {
+    name: "Forest",
+    bgTop: "#14281d",
+    bgBottom: "#06120b",
+    accentStart: "#22c55e",
+    accentEnd: "#84cc16",
+    textColor: "#f0fdf4",
+  },
+  {
+    name: "Lime",
+    bgTop: "#1a2e05",
+    bgBottom: "#0a1402",
+    accentStart: "#a3e635",
+    accentEnd: "#22c55e",
+    textColor: "#f7fee7",
+  },
+  {
+    name: "Mono Dark",
+    bgTop: "#1f1f1f",
+    bgBottom: "#000000",
+    accentStart: "#ffffff",
+    accentEnd: "#a3a3a3",
+    textColor: "#ffffff",
+  },
+  {
+    name: "Mono Light",
+    bgTop: "#f5f5f5",
+    bgBottom: "#e5e5e5",
+    accentStart: "#171717",
+    accentEnd: "#525252",
+    textColor: "#0a0a0a",
+  },
+  {
+    name: "Berry",
+    bgTop: "#2a0f2e",
+    bgBottom: "#100410",
+    accentStart: "#ec4899",
+    accentEnd: "#a855f7",
+    textColor: "#fdf4ff",
+  },
+  {
+    name: "Violet",
+    bgTop: "#1e1b4b",
+    bgBottom: "#0a0823",
+    accentStart: "#8b5cf6",
+    accentEnd: "#6366f1",
+    textColor: "#f5f3ff",
+  },
+  {
+    name: "Rose Gold",
+    bgTop: "#2b1517",
+    bgBottom: "#100506",
+    accentStart: "#fb7185",
+    accentEnd: "#f43f5e",
+    textColor: "#fff1f2",
+  },
+  {
+    name: "Gold",
+    bgTop: "#2a1f05",
+    bgBottom: "#100c02",
+    accentStart: "#facc15",
+    accentEnd: "#eab308",
+    textColor: "#fefce8",
+  },
+  {
+    name: "Cyber",
+    bgTop: "#0a0a23",
+    bgBottom: "#000010",
+    accentStart: "#22d3ee",
+    accentEnd: "#ec4899",
+    textColor: "#e0f2fe",
+  },
+  {
+    name: "Mint",
+    bgTop: "#022c22",
+    bgBottom: "#001510",
+    accentStart: "#34d399",
+    accentEnd: "#10b981",
+    textColor: "#ecfdf5",
+  },
+  {
+    name: "Coral",
+    bgTop: "#2b1410",
+    bgBottom: "#0e0504",
+    accentStart: "#ff7e5f",
+    accentEnd: "#feb47b",
+    textColor: "#fff7ed",
+  },
+  {
+    name: "Slate",
+    bgTop: "#1e293b",
+    bgBottom: "#0f172a",
+    accentStart: "#94a3b8",
+    accentEnd: "#64748b",
+    textColor: "#f1f5f9",
+  },
+  {
+    name: "Crimson",
+    bgTop: "#2a0a0a",
+    bgBottom: "#100202",
+    accentStart: "#dc2626",
+    accentEnd: "#7f1d1d",
+    textColor: "#fef2f2",
+  },
+  {
+    name: "Tropical",
+    bgTop: "#042f2e",
+    bgBottom: "#011514",
+    accentStart: "#f59e0b",
+    accentEnd: "#10b981",
+    textColor: "#ecfeff",
+  },
+  {
+    name: "Lavender",
+    bgTop: "#f5f3ff",
+    bgBottom: "#ddd6fe",
+    accentStart: "#7c3aed",
+    accentEnd: "#5b21b6",
+    textColor: "#1e1b4b",
+  },
+  {
+    name: "Peach",
+    bgTop: "#fff7ed",
+    bgBottom: "#fed7aa",
+    accentStart: "#ea580c",
+    accentEnd: "#c2410c",
+    textColor: "#431407",
+  },
+  {
+    name: "Midnight",
+    bgTop: "#000000",
+    bgBottom: "#000000",
+    accentStart: "#60a5fa",
+    accentEnd: "#a78bfa",
+    textColor: "#e5e7eb",
+  },
+  {
+    name: "Paper",
+    bgTop: "#fafaf9",
+    bgBottom: "#f5f5f4",
+    accentStart: "#0c0a09",
+    accentEnd: "#44403c",
+    textColor: "#1c1917",
+  },
+  {
+    name: "Neon",
+    bgTop: "#020617",
+    bgBottom: "#000000",
+    accentStart: "#a3e635",
+    accentEnd: "#06b6d4",
+    textColor: "#f0fdf4",
+  },
+  {
+    name: "Rust",
+    bgTop: "#2b1409",
+    bgBottom: "#0f0703",
+    accentStart: "#c2410c",
+    accentEnd: "#7c2d12",
+    textColor: "#fff7ed",
+  },
+];
+
+// --- Color utilities for palette generation ---
+function hexToHsl(hex: string): [number, number, number] {
+  const m = hex.replace("#", "");
+  const r = parseInt(m.substring(0, 2), 16) / 255;
+  const g = parseInt(m.substring(2, 4), 16) / 255;
+  const b = parseInt(m.substring(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  const l = (max + min) / 2;
+  const d = max - min;
+  const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  if (d !== 0) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return [h, s, l];
+}
+function hslToHex(h: number, s: number, l: number) {
+  h = ((h % 360) + 360) % 360;
+  s = Math.max(0, Math.min(1, s));
+  l = Math.max(0, Math.min(1, l));
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r = 0,
+    g = 0,
+    b = 0;
+  if (h < 60) [r, g, b] = [c, x, 0];
+  else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x];
+  else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c];
+  else [r, g, b] = [c, 0, x];
+  const to = (v: number) =>
+    Math.round((v + m) * 255)
+      .toString(16)
+      .padStart(2, "0");
+  return `#${to(r)}${to(g)}${to(b)}`;
+}
+
+function generatePalette(baseHex: string): Preset {
+  const [h, s] = hexToHsl(baseHex);
+  const sat = Math.max(0.5, s);
+  return {
+    name: "Custom",
+    bgTop: hslToHex(h, Math.min(0.55, sat * 0.6), 0.12),
+    bgBottom: hslToHex(h, Math.min(0.5, sat * 0.5), 0.04),
+    accentStart: baseHex,
+    accentEnd: hslToHex(h + 20, sat, 0.5),
+    textColor: hslToHex(h, 0.1, 0.96),
+  };
+}
+
+function Index() {
+  const [bgTop, setBgTop] = useState("#311d14");
+  const [bgBottom, setBgBottom] = useState("#1c0b0b");
+  const [accentStart, setAccentStart] = useState("#e05718");
+  const [accentEnd, setAccentEnd] = useState("#d63833");
+  const [textColor, setTextColor] = useState("#e8e8e8");
+  const [borderColor, setBorderColor] = useState("#ffffff");
+  const [borderOpacity, setBorderOpacity] = useState(0.15);
+  const [pngScale, setPngScale] = useState(4);
+  const [iconImage, setIconImage] = useState<string | null>(null);
+  const [showPresets, setShowPresets] = useState(true);
+  const [baseColor, setBaseColor] = useState("#e05718");
+  const [badgeText, setBadgeText] = useState("architectury api");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const svg = useMemo(
+    () =>
+      buildSvg({
+        bgTop,
+        bgBottom,
+        accentStart,
+        accentEnd,
+        textColor,
+        borderColor,
+        borderOpacity,
+        iconImage,
+        badgeText,
+      }),
+    [
+      bgTop,
+      bgBottom,
+      accentStart,
+      accentEnd,
+      textColor,
+      borderColor,
+      borderOpacity,
+      iconImage,
+      badgeText,
+    ],
+  );
+
+  const applyPreset = (p: Preset) => {
+    setBgTop(p.bgTop);
+    setBgBottom(p.bgBottom);
+    setAccentStart(p.accentStart);
+    setAccentEnd(p.accentEnd);
+    setTextColor(p.textColor);
+  };
+
+  const generateFromBase = () => applyPreset(generatePalette(baseColor));
+
+  const handleIconUpload = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => setIconImage(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const downloadSvg = () => {
+    const blob = new Blob([svg], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "logo.svg";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadPng = async () => {
+    const w = 213 * pngScale;
+    const h = 56 * pngScale;
+    const svg64 = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    const img = new Image();
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("img load failed"));
+      img.src = svg64;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0, w, h);
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `logo@${pngScale}x.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, "image/png");
+  };
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="mx-auto max-w-5xl px-6 py-10">
+        <header className="mb-8">
+          <h1 className="text-3xl font-semibold tracking-tight">Logo Color Editor</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tweak colors and the icon, then export as SVG or PNG.
+          </p>
+        </header>
+
+        <section className="mb-8 flex items-center justify-center rounded-xl border bg-[conic-gradient(at_top_left,_#f5f5f5_25%,_#e5e5e5_25%_50%,_#f5f5f5_50%_75%,_#e5e5e5_75%)] bg-[length:24px_24px] p-12">
+          <div className="scale-[2] origin-center" dangerouslySetInnerHTML={{ __html: svg }} />
+        </section>
+
+        <section className="mb-8 rounded-lg border bg-card p-4">
+          <h2 className="mb-3 text-sm font-medium">Generate palette from a color</h2>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex items-center gap-3">
+              <input
+                type="color"
+                value={baseColor}
+                onChange={(e) => setBaseColor(e.target.value)}
+                className="h-10 w-14 cursor-pointer rounded border bg-transparent"
+              />
+              <input
+                type="text"
+                value={baseColor}
+                onChange={(e) => setBaseColor(e.target.value)}
+                className="w-32 rounded-md border bg-background px-3 py-2 font-mono text-sm"
+              />
+            </div>
+            <button
+              onClick={generateFromBase}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Generate
+            </button>
+            <p className="text-xs text-muted-foreground">
+              Builds matching background, accent, and text colors from your pick.
+            </p>
+          </div>
+          <div className="mt-4 flex flex-col gap-2">
+            <label className="text-sm font-medium">Badge text</label>
+            <input
+              type="text"
+              value={badgeText}
+              onChange={(e) => setBadgeText(e.target.value)}
+              placeholder="architectury api"
+              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+        </section>
+
+        <section className="mb-8">
+          <button
+            onClick={() => setShowPresets((v) => !v)}
+            className="mb-3 flex w-full items-center justify-between text-sm font-medium text-muted-foreground hover:text-foreground"
+          >
+            <span>Presets ({PRESETS.length})</span>
+            <span>{showPresets ? "Hide ▲" : "Show ▼"}</span>
+          </button>
+          {showPresets && (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+              {PRESETS.map((p) => (
+                <button
+                  key={p.name}
+                  onClick={() => applyPreset(p)}
+                  className="group flex flex-col gap-2 rounded-md border bg-card p-2 text-left hover:border-foreground/30"
+                >
+                  <div
+                    className="h-10 w-full rounded"
+                    style={{ background: `linear-gradient(180deg, ${p.bgTop}, ${p.bgBottom})` }}
+                  >
+                    <div className="flex h-full items-center justify-center gap-1">
+                      <span
+                        className="h-4 w-4 rounded-full"
+                        style={{
+                          background: `linear-gradient(180deg, ${p.accentStart}, ${p.accentEnd})`,
+                        }}
+                      />
+                      <span className="text-xs font-bold" style={{ color: p.textColor }}>
+                        Aa
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-xs">{p.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="mb-8">
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground">Icon</h2>
+          <div className="flex flex-wrap gap-3">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*,image/svg+xml"
+              onChange={(e) => e.target.files?.[0] && handleIconUpload(e.target.files[0])}
+              className="block text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
+            />
+            {iconImage && (
+              <button
+                onClick={() => {
+                  setIconImage(null);
+                  if (fileRef.current) fileRef.current.value = "";
+                }}
+                className="rounded-md border bg-card px-3 py-2 text-sm hover:bg-accent"
+              >
+                Reset icon
+              </button>
+            )}
+          </div>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground">Colors</h2>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <ColorField label="Background top" value={bgTop} onChange={setBgTop} />
+            <ColorField label="Background bottom" value={bgBottom} onChange={setBgBottom} />
+            <ColorField
+              label="Accent gradient start (icon + 'inse')"
+              value={accentStart}
+              onChange={setAccentStart}
+            />
+            <ColorField
+              label="Accent gradient end (icon + 'inse')"
+              value={accentEnd}
+              onChange={setAccentEnd}
+            />
+            <ColorField label="Text color ('Dev')" value={textColor} onChange={setTextColor} />
+            <ColorField label="Border color" value={borderColor} onChange={setBorderColor} />
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium">
+                Border opacity: {borderOpacity.toFixed(2)}
+              </label>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.01}
+                value={borderOpacity}
+                onChange={(e) => setBorderOpacity(parseFloat(e.target.value))}
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className="mb-8">
+          <h2 className="mb-3 text-sm font-medium text-muted-foreground">Export</h2>
+          <div className="flex flex-col gap-2 md:max-w-sm">
+            <label className="text-sm font-medium">PNG scale: {pngScale}x</label>
+            <input
+              type="range"
+              min={1}
+              max={10}
+              step={1}
+              value={pngScale}
+              onChange={(e) => setPngScale(parseInt(e.target.value, 10))}
+            />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button
+              onClick={downloadSvg}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              Download SVG
+            </button>
+            <button
+              onClick={downloadPng}
+              className="rounded-md border bg-card px-4 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Download PNG ({pngScale}x)
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function ColorField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-sm font-medium">{label}</label>
+      <div className="flex items-center gap-3">
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-10 w-14 cursor-pointer rounded border bg-transparent"
+        />
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="flex-1 rounded-md border bg-background px-3 py-2 text-sm font-mono"
+        />
+      </div>
+    </div>
+  );
+}

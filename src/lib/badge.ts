@@ -253,6 +253,16 @@ function normalizeHex(value: string | null, fallback: string): string {
   return HEX_RE.test(value) ? (value.startsWith("#") ? value : `#${value}`) : fallback;
 }
 
+function normalizeIconUrl(value: string | null): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 export function buildBadgeSvgFromParams(params: URLSearchParams): string {
   const presetName = params.get("preset");
   const preset = presetName
@@ -273,7 +283,7 @@ export function buildBadgeSvgFromParams(params: URLSearchParams): string {
     textColor: normalizeHex(params.get("textColor"), base.textColor),
     borderColor: normalizeHex(params.get("borderColor"), DEFAULT_BADGE.borderColor),
     borderOpacity,
-    iconImage: null,
+    iconImage: normalizeIconUrl(params.get("icon")),
     badgeText: (params.get("text") ?? DEFAULT_BADGE.badgeText).slice(0, 60),
   };
 

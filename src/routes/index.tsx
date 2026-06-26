@@ -80,6 +80,7 @@ function Index() {
   const [borderOpacity, setBorderOpacity] = useState(0.15);
   const [pngScale, setPngScale] = useState(4);
   const [iconImage, setIconImage] = useState<string | null>(null);
+  const [iconUrl, setIconUrl] = useState("");
   const [showPresets, setShowPresets] = useState(true);
   const [baseColor, setBaseColor] = useState("#e05718");
   const [badgeText, setBadgeText] = useState("Architectury API");
@@ -97,9 +98,20 @@ function Index() {
       borderColor: borderColor.replace("#", ""),
       borderOpacity: String(borderOpacity),
     });
+    if (iconUrl) params.set("icon", iconUrl);
     if (typeof window === "undefined") return `/badge.svg?${params.toString()}`;
     return `${window.location.origin}/badge.svg?${params.toString()}`;
-  }, [badgeText, bgTop, bgBottom, accentStart, accentEnd, textColor, borderColor, borderOpacity]);
+  }, [
+    badgeText,
+    bgTop,
+    bgBottom,
+    accentStart,
+    accentEnd,
+    textColor,
+    borderColor,
+    borderOpacity,
+    iconUrl,
+  ]);
 
   const copyBadgeUrl = async () => {
     await navigator.clipboard.writeText(badgeUrl);
@@ -117,7 +129,7 @@ function Index() {
         textColor,
         borderColor,
         borderOpacity,
-        iconImage,
+        iconImage: iconImage ?? (iconUrl || null),
         badgeText,
       }),
     [
@@ -129,6 +141,7 @@ function Index() {
       borderColor,
       borderOpacity,
       iconImage,
+      iconUrl,
       badgeText,
     ],
   );
@@ -313,6 +326,17 @@ function Index() {
               </button>
             )}
           </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Uploaded files only work for SVG/PNG export — the badge URL below can't embed local
+            files. To show a custom icon in the shareable link, paste a hosted image URL instead:
+          </p>
+          <input
+            type="text"
+            value={iconUrl}
+            onChange={(e) => setIconUrl(e.target.value)}
+            placeholder="https://example.com/icon.png"
+            className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm"
+          />
         </section>
 
         <section className="mb-8">

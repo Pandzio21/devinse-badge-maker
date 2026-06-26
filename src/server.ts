@@ -42,7 +42,7 @@ export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const url = new URL(request.url);
     if (url.pathname === "/badge.svg") {
-      const svg = buildBadgeSvgFromParams(url.searchParams);
+      const svg = await buildBadgeSvgFromParams(url.searchParams);
       return new Response(svg, {
         headers: {
           "content-type": "image/svg+xml",

@@ -277,7 +277,22 @@ function normalizeIconUrl(value: string | null): string | null {
   }
 }
 
-export function buildBadgeSvgFromParams(params: URLSearchParams): string {
+async function inlineIconUrl(value: string | null): Promise<string | null> {
+  if (!value || value.startsWith("data:image/")) return value;
+  try {
+    const response = await fetch(value);
+    if (!response.ok) return value;
+    const contentType = response.headers.get("content-type")?.split(";")[0]?.trim() || "image/png";
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    let binary = "";
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    return `data:${contentType};base64,${btoa(binary)}`;
+  } catch {
+    return value;
+  }
+}
+
+export async function buildBadgeSvgFromParams(params: URLSearchParams): Promise<string> {
   const presetName = params.get("preset");
   const preset = presetName
     ? PRESETS.find((p) => p.name.toLowerCase() === presetName.toLowerCase())
@@ -297,7 +312,7 @@ export function buildBadgeSvgFromParams(params: URLSearchParams): string {
     textColor: normalizeHex(params.get("textColor"), base.textColor),
     borderColor: normalizeHex(params.get("borderColor"), DEFAULT_BADGE.borderColor),
     borderOpacity,
-    iconImage: normalizeIconUrl(params.get("icon")),
+    iconImage: await inlineIconUrl(normalizeIconUrl(params.get("icon"))),
     badgeText: (params.get("text") ?? DEFAULT_BADGE.badgeText).slice(0, 60),
   };
 

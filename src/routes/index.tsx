@@ -85,6 +85,7 @@ function Index() {
   const [baseColor, setBaseColor] = useState("#e05718");
   const [badgeText, setBadgeText] = useState("Architectury API");
   const [urlCopied, setUrlCopied] = useState(false);
+  const [tagCopied, setTagCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const badgeUrl = useMemo(() => {
@@ -115,10 +116,21 @@ function Index() {
     iconUrl,
   ]);
 
+  const imgTag = useMemo(() => {
+    const altText = badgeText.replace(/"/g, "&quot;");
+    return `<img alt="${altText}" height="56" src="${badgeUrl}">`;
+  }, [badgeText, badgeUrl]);
+
   const copyBadgeUrl = async () => {
     await navigator.clipboard.writeText(badgeUrl);
     setUrlCopied(true);
     setTimeout(() => setUrlCopied(false), 1500);
+  };
+
+  const copyImgTag = async () => {
+    await navigator.clipboard.writeText(imgTag);
+    setTagCopied(true);
+    setTimeout(() => setTagCopied(false), 1500);
   };
 
   const svg = useMemo(
@@ -265,6 +277,23 @@ function Index() {
               {urlCopied ? "Copied!" : "Copy badge URL"}
             </button>
           </div>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <input
+              type="text"
+              readOnly
+              value={imgTag}
+              className="min-w-0 flex-1 rounded-md border bg-background px-3 py-2 font-mono text-xs text-muted-foreground"
+            />
+            <button
+              onClick={copyImgTag}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+            >
+              {tagCopied ? "Copied!" : "Copy <img> tag"}
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Paste the ready-made tag above directly into Markdown/HTML — no manual editing needed.
+          </p>
         </section>
 
         <section className="mb-8">

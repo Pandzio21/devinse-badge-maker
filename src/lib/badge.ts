@@ -232,6 +232,12 @@ export const DEFAULT_BADGE: BadgeOpts = {
   badgeText: "Architectury API",
 };
 
+const ORIGINAL_WIDTH = 213;
+const TEXT_START_X = 59.5;
+const RIGHT_PADDING = 14;
+const MIN_WIDTH = 140;
+const AVG_CHAR_WIDTH = 8.6; // approx. width of bold 17px Arial glyph
+
 export function buildBadgeSvg(o: BadgeOpts) {
   const iconBlock = o.iconImage
     ? `<image href="${o.iconImage}" x="10" y="8" width="40" height="40" preserveAspectRatio="xMidYMid meet"/>`
@@ -241,9 +247,16 @@ export function buildBadgeSvg(o: BadgeOpts) {
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
-  const textBlock = `<g filter="url(#d)"><path fill="${o.textColor}" d="${REQUIRES_PATH}"/><text x="59.5" y="43.5" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="url(#cText)">${escapedText}</text></g>`;
+  const textBlock = `<g filter="url(#d)"><path fill="${o.textColor}" d="${REQUIRES_PATH}"/><text x="${TEXT_START_X}" y="43.5" font-family="Arial, sans-serif" font-size="17" font-weight="700" fill="url(#cText)">${escapedText}</text></g>`;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="213" height="56" fill="none" viewBox="0 0 213 56"><rect width="213" height="56" fill="url(#bgGrad)" rx="8"/><rect width="210.9" height="53.9" x="1.05" y="1.05" stroke="${o.borderColor}" stroke-opacity="${o.borderOpacity}" stroke-width="2.1" rx="6.95"/>${iconBlock}${textBlock}<defs><linearGradient id="bgGrad" x1="106.5" x2="106.5" y1="0" y2="56" gradientUnits="userSpaceOnUse"><stop stop-color="${o.bgTop}"/><stop offset="1" stop-color="${o.bgBottom}"/></linearGradient><linearGradient id="cIcon" x1="32" x2="32" y1="8" y2="48" gradientUnits="userSpaceOnUse"><stop stop-color="${o.accentStart}"/><stop offset="1" stop-color="${o.accentEnd}"/></linearGradient><linearGradient id="cText" x1="136.066" x2="136.066" y1="28.5" y2="43.731" gradientUnits="userSpaceOnUse"><stop stop-color="${o.accentStart}"/><stop offset="1" stop-color="${o.accentEnd}"/></linearGradient><filter id="b" width="51.429" height="51.429" x="6.286" y="2.286" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/><feOffset/><feGaussianBlur stdDeviation="2.857"/><feComposite in2="hardAlpha" operator="out"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/><feBlend in2="BackgroundImageFix" result="e1"/><feBlend in="SourceGraphic" in2="e1" result="shape"/></filter><filter id="d" width="152.2" height="48.677" x="54.4" y="3.9" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/><feOffset/><feGaussianBlur stdDeviation="2.8"/><feComposite in2="hardAlpha" operator="out"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/><feBlend in2="BackgroundImageFix" result="e1"/><feBlend in="SourceGraphic" in2="e1" result="shape"/></filter></defs></svg>`;
+  const textWidth = o.badgeText.length * AVG_CHAR_WIDTH;
+  const width = Math.max(MIN_WIDTH, Math.round(TEXT_START_X + textWidth + RIGHT_PADDING));
+  const delta = width - ORIGINAL_WIDTH;
+  const borderWidth = width - 2.1;
+  const halfWidth = width / 2;
+  const filterDWidth = Math.max(40, 152.2 + delta);
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="56" fill="none" viewBox="0 0 ${width} 56"><rect width="${width}" height="56" fill="url(#bgGrad)" rx="8"/><rect width="${borderWidth}" height="53.9" x="1.05" y="1.05" stroke="${o.borderColor}" stroke-opacity="${o.borderOpacity}" stroke-width="2.1" rx="6.95"/>${iconBlock}${textBlock}<defs><linearGradient id="bgGrad" x1="${halfWidth}" x2="${halfWidth}" y1="0" y2="56" gradientUnits="userSpaceOnUse"><stop stop-color="${o.bgTop}"/><stop offset="1" stop-color="${o.bgBottom}"/></linearGradient><linearGradient id="cIcon" x1="32" x2="32" y1="8" y2="48" gradientUnits="userSpaceOnUse"><stop stop-color="${o.accentStart}"/><stop offset="1" stop-color="${o.accentEnd}"/></linearGradient><linearGradient id="cText" x1="136.066" x2="136.066" y1="28.5" y2="43.731" gradientUnits="userSpaceOnUse"><stop stop-color="${o.accentStart}"/><stop offset="1" stop-color="${o.accentEnd}"/></linearGradient><filter id="b" width="51.429" height="51.429" x="6.286" y="2.286" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/><feOffset/><feGaussianBlur stdDeviation="2.857"/><feComposite in2="hardAlpha" operator="out"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/><feBlend in2="BackgroundImageFix" result="e1"/><feBlend in="SourceGraphic" in2="e1" result="shape"/></filter><filter id="d" width="${filterDWidth}" height="48.677" x="54.4" y="3.9" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse"><feFlood flood-opacity="0" result="BackgroundImageFix"/><feColorMatrix in="SourceAlpha" result="hardAlpha" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"/><feOffset/><feGaussianBlur stdDeviation="2.8"/><feComposite in2="hardAlpha" operator="out"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/><feBlend in2="BackgroundImageFix" result="e1"/><feBlend in="SourceGraphic" in2="e1" result="shape"/></filter></defs></svg>`;
 }
 
 const HEX_RE = /^#?[0-9a-fA-F]{6}$/;
@@ -255,6 +268,7 @@ function normalizeHex(value: string | null, fallback: string): string {
 
 function normalizeIconUrl(value: string | null): string | null {
   if (!value) return null;
+  if (value.startsWith("data:image/")) return value;
   try {
     const url = new URL(value);
     return url.protocol === "http:" || url.protocol === "https:" ? url.toString() : null;

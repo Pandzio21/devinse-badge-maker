@@ -98,7 +98,8 @@ function Index() {
       borderColor: borderColor.replace("#", ""),
       borderOpacity: String(borderOpacity),
     });
-    if (iconUrl) params.set("icon", iconUrl);
+    const icon = iconImage || iconUrl;
+    if (icon) params.set("icon", icon);
     if (typeof window === "undefined") return `/badge.svg?${params.toString()}`;
     return `${window.location.origin}/badge.svg?${params.toString()}`;
   }, [
@@ -107,6 +108,7 @@ function Index() {
     bgBottom,
     accentStart,
     accentEnd,
+    iconImage,
     textColor,
     borderColor,
     borderOpacity,
@@ -327,15 +329,16 @@ function Index() {
             )}
           </div>
           <p className="mt-2 text-xs text-muted-foreground">
-            Uploaded files only work for SVG/PNG export — the badge URL below can't embed local
-            files. To show a custom icon in the shareable link, paste a hosted image URL instead:
+            Uploaded files are embedded directly into the badge URL — keep them small (a few KB) or
+            the link gets unwieldy. You can also use a hosted image URL instead:
           </p>
           <input
             type="text"
             value={iconUrl}
             onChange={(e) => setIconUrl(e.target.value)}
+            disabled={!!iconImage}
             placeholder="https://example.com/icon.png"
-            className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm"
+            className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-50"
           />
         </section>
 
